@@ -58,7 +58,7 @@ def main():
         message.set_content("Ski recomendations")
 
         message["To"] = 1
-        message["From"] = "mateodenys@gmail.com"
+        message["From"] = "woutbleyen@gmail.com"
         message["Subject"] = "SKi recommendations"
 
         # encoded message
@@ -105,7 +105,7 @@ for resort, coord in coordinates.items():
 import requests
 
 response = requests.get(
-        f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid=50d520feae8bb9a6d968a0fa080baf1f&units=metric")
+        f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid=bbc71d0c3567c74e05b50bdff72f635b&units=metric")
 data = response.json()
 
 maxtemps = []
