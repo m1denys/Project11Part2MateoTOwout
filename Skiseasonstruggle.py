@@ -1,3 +1,24 @@
+
+
+
+def calculate_score(avg_temp, snowfall):
+    score = 0
+    # hier kijk het programma naar de gemiddelde temp en gaat dan naarop kijken welke score hij moet geven
+    if avg_temp < 0:
+        score += 5
+    elif avg_temp >= 0 and avg_temp < 5:
+        score += 4
+    elif avg_temp >= 5 and avg_temp < 10:
+        score += 3
+    else:
+        score += 1
+
+    #
+    if snowfall > 5:
+        score = min(5, score + 1)
+
+    return score
+
 import os.path
 
 from google.auth.transport.requests import Request
@@ -6,7 +27,6 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 
 import base64
 from email.message import EmailMessage
-
 import google.auth
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
@@ -16,6 +36,54 @@ SCOPES = ["https://www.googleapis.com/auth/gmail.compose"]
 
 
 def main():
+    coordinates = {
+        "Les Trois Vallées": {"lat": 45.3271, "lon": 6.5783},
+        "Sölden": {"lat": 46.9655, "lon": 11.0076},
+        "Chamonix-Mont Blanc": {"lat": 45.9237, "lon": 6.869},
+        "Val di Fassa": {"lat": 46.4424081, "lon": 11.6968477},
+        "Salzburger Sportwelt": {"lat": 46.8012, "lon": 9.2305},
+        "Alpenarena Flims-Laax-Falera": {"lat": 47.8095, "lon": 13.0550},
+        "Kitzsteinhorn Kaprun": {"lat": 47.1948, "lon": 10.1602},
+        "Ski Arlberg": {"lat": 45.4692, "lon": 6.9068},
+        "Espace Killy": {"lat": 50.7261, "lon": 15.6094}
+
+    }
+
+    import requests
+
+    avg_temps = {}
+    snowfalls = {}
+    scores = {}
+    # voor ieder resort gaat het hier de coordinaten halen
+    for resort, coord in coordinates.items():
+        lat = coord["lat"]
+        lon = coord["lon"]
+        # dit is de api
+        response = requests.get(
+            f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid=50d520feae8bb9a6d968a0fa080baf1f&units=metric")
+        data = response.json()
+
+        maxtemps = []
+        snowpdays = []
+        # deze functie haal de info uit de maximum temperatuur en de sneewval uit de api json file
+        for forecast in data['list']:
+            if 'main' in forecast and 'temp_max' in forecast['main']:
+                maxtemps.append(forecast['main']['temp_max'])
+            if 'snow' in forecast:
+                if '3h' in forecast['snow']:
+                    snowpdays.append(forecast['snow']['3h'] / 10)
+        # berekening van gemiddelde temp en sneeuwval
+        avg_temp = sum(maxtemps) / len(maxtemps) if maxtemps else 0
+        tot_snow = sum(snowpdays)
+        # dit steekt voor iedere resort de gem temp en de totale sneeuwval in dicionairies
+        avg_temps[resort] = avg_temp
+        snowfalls[resort] = tot_snow
+
+        # berekent voor ieder skigebied score op 5 en stopt het in een dict
+        scores[resort] = calculate_score(avg_temp, tot_snow)
+
+
+
     """Shows basic usage of the Gmail API.
     Lists the user's Gmail labels.
     """
@@ -52,13 +120,23 @@ def main():
 
         # create gmail api client
         service = build("gmail", "v1", credentials=creds)
+        result_data = ""
+        for resort, avg_temp in avg_temps.items():
+            result_data += f"Skigebied: {resort}, Gemiddelde temp: {avg_temp}°C, Totale sneeuwval: {snowfalls[resort]}cm, Score: {scores[resort]}/5\n"
 
         message = EmailMessage()
 
+<<<<<<< Updated upstream
         message.set_content("Ski recomendations")
 
         message["To"] = 1
         message["From"] = "woutbleyen@gmail.com"
+=======
+        message.set_content(result_data)
+# input mail
+        message["To"] = input("geef je email adres: ")
+        message["From"] = "mateodenys@gmail.com"
+>>>>>>> Stashed changes
         message["Subject"] = "SKi recommendations"
 
         # encoded message
@@ -84,18 +162,8 @@ if __name__ == "__main__":
     main()
 
 
-coordinates = {
-    "Les Trois Vallées": {"lat": 45.3271, "lon": 6.5783},
-    "Sölden": {"lat": 46.9655, "lon": 11.0076},
-    "Chamonix-Mont Blanc": {"lat": 45.9237, "lon": 6.869},
-    "4": {"lat": 46.4424081, "lon": 11.6968477},
-    "5": {"lat": 46.8012, "lon": 9.2305},
-    "6": {"lat": 47.8095, "lon": 13.0550},
-    "7": {"lat": 47.1948, "lon": 10.1602},
-    "8": {"lat": 45.4692, "lon": 6.9068},
-    "Espace Killy": {"lat": 50.7261, "lon": 15.6094}
-}
 
+<<<<<<< Updated upstream
 avg_temps = {}
 snowfalls = {}
 
@@ -129,3 +197,5 @@ for resort, avg_temp in avg_temps.items():
 
 for resort, snowfall in snowfalls.items():
     print(f"Resort: {resort}, Total Snowfall: {snowfall}cm")
+=======
+>>>>>>> Stashed changes
