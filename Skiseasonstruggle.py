@@ -1,5 +1,5 @@
-
-
+# teken om ff te wachten = handig
+print("even wachten, we komen zo tot u")
 
 def calculate_score(avg_temp, snowfall):
     score = 0
@@ -126,18 +126,11 @@ def main():
 
         message = EmailMessage()
 
-<<<<<<< Updated upstream
-        message.set_content("Ski recomendations")
-
-        message["To"] = 1
-        message["From"] = "woutbleyen@gmail.com"
-=======
         message.set_content(result_data)
 # input mail
         message["To"] = input("geef je email adres: ")
         message["From"] = "mateodenys@gmail.com"
->>>>>>> Stashed changes
-        message["Subject"] = "SKi recommendations"
+        message["Subject"] = "SKi-aanbevelingen van Booking.com"
 
         # encoded message
         encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
@@ -161,41 +154,3 @@ def main():
 if __name__ == "__main__":
     main()
 
-
-
-<<<<<<< Updated upstream
-avg_temps = {}
-snowfalls = {}
-
-for resort, coord in coordinates.items():
-    lat = coord["lat"]
-    lon = coord["lon"]
-import requests
-
-response = requests.get(
-        f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid=bbc71d0c3567c74e05b50bdff72f635b&units=metric")
-data = response.json()
-
-maxtemps = []
-snowpdays = []
-
-for forecast in data['list']:
-    if 'main' in forecast and 'temp_max' in forecast['main']:
-            maxtemps.append(forecast['main']['temp_max'])
-    if 'main' in forecast and 'snow' in forecast['main']:
-            snowpdays.append(
-                forecast['main']['snow']['3h'] / 10 if 'snow' in forecast['main'] else 0)
-
-    avg_temp = sum(maxtemps) / len(maxtemps) if maxtemps else 0
-    tot_snow = sum(snowpdays)
-
-    avg_temps[resort] = avg_temp
-    snowfalls[resort] = tot_snow
-
-for resort, avg_temp in avg_temps.items():
-    print(f"Resort: {resort}, Average Temperature: {avg_temp}°C")
-
-for resort, snowfall in snowfalls.items():
-    print(f"Resort: {resort}, Total Snowfall: {snowfall}cm")
-=======
->>>>>>> Stashed changes
