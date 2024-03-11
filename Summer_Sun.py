@@ -8,22 +8,28 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 import requests
 
-# Vraag de reiziger om de ideale temperatuur en regentolerantie in te voeren
+avg_temps = {}
+total_rains = {}
+
+# de persoon welkom heten
 print("Welkom bij de Summer Sun!")
+# de iedeale temperatuur vragen
 idealetemp = float(input("Wat is uw ideale temperatuur? (in graden Celsius): "))
+# de gewenste regenval vragen
 hoeveelheid_regen = input("Wat is uw maximale regen wat u wilt hebben?\n1. Zeer weinig regen (minder dan 1mm per "
                           "dag)\n2. Minder dan 2mm"
                           "per dag (het Belgische gemiddelde)\n3. Geen voorkeur\nVoer het nummer van uw keuze in: ")
+# een print maken dat de persoon even moet wachten op het progamma
 print("even geduld")
 
 
-# Functie om de regenval te converteren naar de benamingen
-def convert_rain_label(hoeveelheid_regen):
-    if hoeveelheid_regen == "1":
+# Functie om de juiste benaming in de mail te krijgen
+def convert_rain_label(resort):
+    if rain_data[resort] < 1:
         return "Zeer weinig"
-    elif hoeveelheid_regen == "2":
+    elif rain_data[resort] < 2:
         return "Minder dan 2mm"
-    elif hoeveelheid_regen == "3":
+    elif rain_data[resort] > 2:
         return "meer dan 2mm"
     else:
         return "Onbekend"
@@ -46,7 +52,7 @@ def calculate_score(avg_temp, total_rain):
     elif temp_difference <= 10:
         score += 1
 
-    # Bereken gemiddelde regen en pas de score aan
+    # Bereken gemiddelde regen plus de juiste score
     avg_rain = total_rain / 5
     if avg_rain < 1:
         score += 4
@@ -58,10 +64,11 @@ def calculate_score(avg_temp, total_rain):
     return score
 
 
+# de scope gebruiken
 SCOPES = ["https://www.googleapis.com/auth/gmail.compose"]
 
 
-# Functie om de temperatuur en regenval voor verschillende skigebieden te halen
+# Functie om de temperatuur en regenval op te halen.
 def temps():
     coordinates = {
         "Ankara, Turkey": {"lat": 39.9334, "lon": 32.8597},
@@ -76,8 +83,7 @@ def temps():
         "Bucharest, Romania": {"lat": 44.4268, "lon": 26.1025}
     }
 
-    avg_temps = {}
-    total_rains = {}  # Een dictionary om de totale regen per gebied bij te houden
+    # Een dictionary om de totale regen per gebied bij te houden
 
     for resort, coord in coordinates.items():
         lat = coord["lat"]
@@ -89,13 +95,13 @@ def temps():
 
         maxtemps = []
         total_rain = 0
-
+    # de code voor de regen en temperatuur op te halen
         for forecast in data['list']:
             if 'main' in forecast and 'temp_max' in forecast['main']:
                 maxtemps.append(forecast['main']['temp_max'])
             if 'rain' in forecast and '3h' in forecast['rain']:
                 total_rain += forecast['rain']['3h']
-
+        # de gemiddelde temp te nemen
         avg_temp = sum(maxtemps) / len(maxtemps) if maxtemps else 0
 
         avg_temps[resort] = avg_temp
@@ -104,8 +110,8 @@ def temps():
     return avg_temps, total_rains
 
 
-# Functie om een e-mail te sturen met skiaanbevelingen
-def email(avg_temps, rain_data, hoeveelheid_regen):
+# Functie om een e-mail te sturen met zomer plaatsen
+def email(avg_temps, rain_data):
     creds = None
 
     if os.path.exists("token.json"):
@@ -140,10 +146,11 @@ def email(avg_temps, rain_data, hoeveelheid_regen):
         message["From"] = "woutbleyen@gmail.com"
         message["Subject"] = "Summer Sun van Booking.com"
 
+        # de inhoud van de mail
         content = "Hier is de ranking van de top 10 gebieden voor uw zomervakantie:\n\n\n"
         for i, resort in enumerate(sorted_resorts[:10], start=1):
             avg_temp = avg_temps[resort]
-            rain_label = convert_rain_label(hoeveelheid_regen)
+            rain_label = convert_rain_label(resort)
             content += (f"{i}. {resort}:\n"
                         f"Gemiddelde temp: {round(avg_temp)}°C\n"
                         f" Hoeveelheid regen: {rain_label}\n\n")
@@ -162,13 +169,13 @@ def email(avg_temps, rain_data, hoeveelheid_regen):
 
         print(f'Draft id: {draft["id"]}\nDraft message: {draft["message"]}')
         service.users().drafts().send(userId="me", body=draft).execute()
+        
+        # de print zorgt dat de peroon kan zien dat die gestuurd is
         print("de mail is gstuurd")
     except HttpError as error:
         print(f"An error occurred: {error}")
 
 
-
-
 if __name__ == "__main__":
     avg_temps, rain_data = temps()
-    email(avg_temps, rain_data, hoeveelheid_regen)
+    email(avg_temps, rain_data)
